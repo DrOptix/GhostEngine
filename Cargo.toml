@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "./ghost_engine",
+
+    "./ghost_sandbox",
+]
