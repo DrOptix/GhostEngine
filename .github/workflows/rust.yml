@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Linux
+  linux_cargo_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo check
+      
+  linux_cargo_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo test --verbose
+      
+  linux_cargo_fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup component add rustfmt
+      - run: cargo fmt -- --check
+  
+  linux_cargo_clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup component add clippy
+      - run: cargo clippy -- -D warnings -W clippy::all
+  
+  # Windows
+  windows_cargo_check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo check
+      
+  windows_cargo_test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo test --verbose
+      
+  windows_cargo_fmt:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup component add rustfmt
+      - run: cargo fmt -- --check
+  
+  windows_cargo_clippy:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup component add clippy
+      - run: cargo clippy -- -D warnings -W clippy::all
+      
+  # MacOS
+  macos_cargo_check:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo check
+      
+  macos_cargo_test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo test --verbose
+      
+  macos_cargo_fmt:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup component add rustfmt
+      - run: cargo fmt -- --check
+  
+  macos_cargo_clippy:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup component add clippy
+      - run: cargo clippy -- -D warnings -W clippy::all
