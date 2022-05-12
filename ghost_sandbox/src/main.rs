@@ -1,5 +1,5 @@
 use ghost_engine::application::Application;
 
 fn main() {
-    Application::default().title("Sandbox").run();
+    Application::default().with_title("Sandbox").run();
 }
