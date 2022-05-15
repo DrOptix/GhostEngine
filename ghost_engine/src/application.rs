@@ -18,22 +18,28 @@ impl ApplicationRunner for RunOnceRunner {
     }
 }
 
-pub struct Application {
+pub struct Application<'app> {
     title: String,
+
+    startup_task: Option<Box<dyn Fn(&mut Application) + 'app>>,
+
     runner: Box<dyn ApplicationRunner>,
 }
 
-impl Default for Application {
+impl Default for Application<'_> {
     fn default() -> Self {
         Self {
             title: "Ghost Engine".to_string(),
+
+            startup_task: None,
+
             runner: Box::new(RunOnceRunner),
         }
     }
 }
 
 /// Builder methods
-impl Application {
+impl<'app> Application<'app> {
     pub fn with_title(mut self, title: &str) -> Self {
         self.title = title.to_string();
         self
@@ -43,10 +49,15 @@ impl Application {
         self.runner = Box::new(runner);
         self
     }
+
+    pub fn with_startup_task(mut self, task: impl Fn(&mut Application) + 'app) -> Self {
+        self.startup_task = Some(Box::new(task));
+        self
+    }
 }
 
 /// Getters
-impl Application {
+impl Application<'_> {
     pub fn title(&self) -> &str {
         &self.title
     }
@@ -57,9 +68,15 @@ impl Application {
 }
 
 /// Life cycle methods
-impl Application {
+impl Application<'_> {
     pub fn on_startup(&mut self) {
-        // Do Nothing
+        let mut startup_task = std::mem::take(&mut self.startup_task);
+
+        if let Some(ref mut startup_task) = startup_task {
+            startup_task(self);
+        }
+
+        self.startup_task = startup_task;
     }
 
     pub fn on_shutdown(&mut self) {
@@ -166,5 +183,50 @@ mod tests {
         let mut app = Application::default();
 
         runner.run(&mut app);
+    }
+
+    #[test]
+    fn can_set_function_as_startup_task() {
+        fn task(_: &mut Application) {}
+
+        Application::default().with_startup_task(task);
+    }
+
+    #[test]
+    fn can_set_closure_as_startup_task() {
+        let task = |_: &mut Application| {};
+
+        Application::default().with_startup_task(task);
+    }
+
+    #[test]
+    fn can_execute_closure_as_startup_task() {
+        let task = |app: &mut Application| {
+            app.title = "Changed".to_string();
+        };
+
+        let mut app = Application::default().with_startup_task(task);
+
+        app.run();
+
+        let expected = "Changed";
+        let actual = app.title();
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn can_execute_function_as_startup_task() {
+        fn task(app: &mut Application) {
+            app.title = "Changed".to_string();
+        }
+
+        let mut app = Application::default().with_startup_task(task);
+        app.run();
+
+        let expected = "Changed";
+        let actual = app.title();
+
+        assert_eq!(expected, actual);
     }
 }
