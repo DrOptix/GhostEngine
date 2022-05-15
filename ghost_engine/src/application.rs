@@ -22,6 +22,7 @@ pub struct Application<'app> {
     title: String,
 
     startup_task: Option<Box<dyn Fn(&mut Application) + 'app>>,
+    shutdown_task: Option<Box<dyn Fn(&mut Application) + 'app>>,
     update_task: Option<Box<dyn Fn(&mut Application) + 'app>>,
 
     runner: Box<dyn ApplicationRunner>,
@@ -33,6 +34,7 @@ impl Default for Application<'_> {
             title: "Ghost Engine".to_string(),
 
             startup_task: None,
+            shutdown_task: None,
             update_task: None,
 
             runner: Box::new(RunOnceRunner),
@@ -55,6 +57,12 @@ impl<'app> Application<'app> {
     pub fn with_startup_task(mut self, task: impl Fn(&mut Application) + 'app) -> Self {
         // NOTE: Do we want the same task to be set as both startup and update???
         self.startup_task = Some(Box::new(task));
+        self
+    }
+
+    pub fn with_shutdown_task(mut self, task: impl Fn(&mut Application) + 'app) -> Self {
+        // NOTE: Do we want the same task to be set as both startup and update???
+        self.shutdown_task = Some(Box::new(task));
         self
     }
 
@@ -89,7 +97,13 @@ impl Application<'_> {
     }
 
     pub fn on_shutdown(&mut self) {
-        // Do Nothing
+        let mut shutdown_task = std::mem::take(&mut self.shutdown_task);
+
+        if let Some(ref mut shutdown_task) = shutdown_task {
+            shutdown_task(self);
+        }
+
+        self.shutdown_task = shutdown_task;
     }
 
     pub fn on_update(&mut self) {
@@ -282,6 +296,51 @@ mod tests {
         }
 
         let mut app = Application::default().with_update_task(task);
+        app.run();
+
+        let expected = "Changed";
+        let actual = app.title();
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn can_set_function_as_shutdown_task() {
+        fn task(_: &mut Application) {}
+
+        Application::default().with_shutdown_task(task);
+    }
+
+    #[test]
+    fn can_set_closure_as_shutdown_task() {
+        let task = |_: &mut Application| {};
+
+        Application::default().with_shutdown_task(task);
+    }
+
+    #[test]
+    fn can_execute_closure_as_shutdown_task() {
+        let task = |app: &mut Application| {
+            app.title = "Changed".to_string();
+        };
+
+        let mut app = Application::default().with_shutdown_task(task);
+
+        app.run();
+
+        let expected = "Changed";
+        let actual = app.title();
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn can_execute_function_as_shutdown_task() {
+        fn task(app: &mut Application) {
+            app.title = "Changed".to_string();
+        }
+
+        let mut app = Application::default().with_shutdown_task(task);
         app.run();
 
         let expected = "Changed";
