@@ -52,7 +52,7 @@ impl ResourceManager {
         }
 
         self.storage
-            .insert(TypeId::of::<T>(), Box::new(Resource::<T>::default()));
+            .insert(type_id, Box::new(Resource::<T>::default()));
 
         Ok(())
     }
@@ -148,7 +148,7 @@ mod tests {
     #[test]
     fn can_get_const_reference_to_simple_resource() {
         let res = ResourceManager::default().with_resource::<usize>();
-        assert_eq!(Some(&0), res.get_resource::<usize>());
+        assert_eq!(Some(&usize::default()), res.get_resource::<usize>());
     }
 
     #[test]
@@ -157,13 +157,13 @@ mod tests {
         struct Speed(f32);
         let res = ResourceManager::default().with_resource::<Speed>();
 
-        assert_eq!(Some(&Speed(0.0)), res.get_resource::<Speed>());
+        assert_eq!(Some(&Speed::default()), res.get_resource::<Speed>());
     }
 
     #[test]
     fn can_get_mut_reference_to_simple_resource() {
         let mut res = ResourceManager::default().with_resource::<usize>();
-        assert_eq!(Some(&mut 0), res.get_resource_mut::<usize>());
+        assert_eq!(Some(&mut usize::default()), res.get_resource_mut::<usize>());
     }
 
     #[test]
@@ -172,7 +172,7 @@ mod tests {
         struct Speed(f32);
         let mut res = ResourceManager::default().with_resource::<Speed>();
 
-        assert_eq!(Some(&mut Speed(0.0)), res.get_resource_mut::<Speed>());
+        assert_eq!(Some(&mut Speed::default()), res.get_resource_mut::<Speed>());
     }
 
     #[test]
