@@ -2,6 +2,6 @@
 
 members = [
     "./ghost_engine",
-
+    "./ghost_ecs",
     "./ghost_sandbox",
 ]
