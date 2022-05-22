@@ -158,6 +158,49 @@ impl Universe {
 
         false
     }
+
+    pub fn get_component<T: Debug + Default + 'static>(&self, entity_id: EntityId) -> Option<&T> {
+        let type_id = TypeId::of::<T>();
+        let entity_record = self.entity_id_records.get(&entity_id);
+
+        if let Some(EntityRecord::Occupied(index)) = entity_record {
+            let bucket = self
+                .component_buckets
+                .get(&type_id)
+                .and_then(|bucket| bucket.as_any().downcast_ref::<Vec<Option<T>>>());
+
+            if let Some(bucket) = bucket {
+                let component = bucket.get(*index).and_then(|component| component.as_ref());
+                return component;
+            }
+        }
+
+        None
+    }
+
+    pub fn get_component_mut<T: Debug + Default + 'static>(
+        &mut self,
+        entity_id: EntityId,
+    ) -> Option<&mut T> {
+        let type_id = TypeId::of::<T>();
+        let entity_record = self.entity_id_records.get_mut(&entity_id);
+
+        if let Some(EntityRecord::Occupied(index)) = entity_record {
+            let bucket = self
+                .component_buckets
+                .get_mut(&type_id)
+                .and_then(|bucket| bucket.as_any_mut().downcast_mut::<Vec<Option<T>>>());
+
+            if let Some(bucket) = bucket {
+                let component = bucket
+                    .get_mut(*index)
+                    .and_then(|component| component.as_mut());
+                return component;
+            }
+        }
+
+        None
+    }
 }
 
 #[cfg(test)]
@@ -335,5 +378,35 @@ mod tests {
         assert!(!universe.has_component::<usize>(entity4));
         assert!(universe.has_component::<f32>(entity4));
         assert!(!universe.has_component::<u32>(entity4));
+    }
+
+    #[test]
+    fn can_read_component_data() {
+        let mut universe = Universe::default();
+        let entity = universe.create_entity();
+
+        universe.add_component::<usize>(entity);
+
+        let component = universe.get_component::<usize>(entity);
+
+        assert_eq!(*(component.unwrap()), 0);
+    }
+
+    #[test]
+    fn can_modify_component_data() {
+        let mut universe = Universe::default();
+        let entity = universe.create_entity();
+
+        universe.add_component::<usize>(entity);
+
+        let component = universe.get_component_mut::<usize>(entity);
+
+        if let Some(component) = component {
+            *component = 1;
+        }
+
+        let component = universe.get_component::<usize>(entity);
+
+        assert_eq!(*(component.unwrap()), 1);
     }
 }
