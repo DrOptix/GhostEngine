@@ -7,27 +7,22 @@ pub enum ResourceCreationError {
     AlreadyRegistered,
 }
 
-pub trait ResourceTrait: Downcast {}
+pub trait Resource: Downcast {}
 
-impl_downcast!(ResourceTrait);
+impl_downcast!(Resource);
 
-#[derive(Default)]
-pub struct Resource<T: Default + 'static> {
-    resource: T,
-}
-
-impl<T: Default + 'static> ResourceTrait for Resource<T> {}
+impl<T: Default + 'static> Resource for T {}
 
 #[derive(Default)]
 pub struct ResourceManager {
-    storage: HashMap<TypeId, Box<dyn ResourceTrait>>,
+    storage: HashMap<TypeId, Box<dyn Resource>>,
 }
 
 /// Builder methods
 impl ResourceManager {
     pub fn with_resource<T: Default + 'static>(mut self) -> Self {
         self.storage
-            .insert(TypeId::of::<T>(), Box::new(Resource::<T>::default()));
+            .insert(TypeId::of::<T>(), Box::new(T::default()));
         self
     }
 }
@@ -41,8 +36,7 @@ impl ResourceManager {
             return Err(ResourceCreationError::AlreadyRegistered);
         }
 
-        self.storage
-            .insert(type_id, Box::new(Resource::<T>::default()));
+        self.storage.insert(type_id, Box::new(T::default()));
 
         Ok(())
     }
@@ -51,16 +45,14 @@ impl ResourceManager {
         self.storage
             .get(&TypeId::of::<T>())
             .map(|x| x.as_ref())
-            .and_then(|x| x.as_any().downcast_ref::<Resource<T>>())
-            .map(|x| &x.resource)
+            .and_then(|x| x.as_any().downcast_ref::<T>())
     }
 
     pub fn get_resource_mut<T: Default + 'static>(&mut self) -> Option<&mut T> {
         self.storage
             .get_mut(&TypeId::of::<T>())
             .map(|x| x.as_mut())
-            .and_then(|x| x.as_any_mut().downcast_mut::<Resource<T>>())
-            .map(|x| &mut x.resource)
+            .and_then(|x| x.as_any_mut().downcast_mut::<T>())
     }
 }
 

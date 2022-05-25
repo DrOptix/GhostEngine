@@ -15,14 +15,14 @@ enum EntityRecord {
     Vacant(Index),
 }
 
-trait ComponentBucketTrait: Downcast + Debug {
+trait ComponentBucket: Downcast + Debug {
     fn push_none(&mut self);
     fn remove_component(&mut self, index: Index);
 }
 
-impl_downcast!(ComponentBucketTrait);
+impl_downcast!(ComponentBucket);
 
-impl<T: Debug + Default + 'static> ComponentBucketTrait for Vec<Option<T>> {
+impl<T: Debug + Default + 'static> ComponentBucket for Vec<Option<T>> {
     fn push_none(&mut self) {
         self.push(None);
     }
@@ -36,7 +36,7 @@ impl<T: Debug + Default + 'static> ComponentBucketTrait for Vec<Option<T>> {
 pub struct Universe {
     next_entity_id: EntityId,
     entity_id_records: HashMap<EntityId, EntityRecord>,
-    component_buckets: HashMap<TypeId, Box<dyn ComponentBucketTrait>>,
+    component_buckets: HashMap<TypeId, Box<dyn ComponentBucket>>,
 }
 
 impl Universe {
