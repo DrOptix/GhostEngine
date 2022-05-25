@@ -1,8 +1,10 @@
 use std::{
-    any::{Any, TypeId},
+    any::TypeId,
     collections::{hash_map::Entry, HashMap},
     fmt::Debug,
 };
+
+use downcast_rs::{impl_downcast, Downcast};
 
 type EntityId = usize;
 type Index = usize;
@@ -13,12 +15,12 @@ enum EntityRecord {
     Vacant(Index),
 }
 
-trait ComponentBucketTrait: Debug {
+trait ComponentBucketTrait: Downcast + Debug {
     fn push_none(&mut self);
     fn remove_component(&mut self, index: Index);
-    fn as_any(&self) -> &dyn Any;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
+
+impl_downcast!(ComponentBucketTrait);
 
 impl<T: Debug + Default + 'static> ComponentBucketTrait for Vec<Option<T>> {
     fn push_none(&mut self) {
@@ -27,14 +29,6 @@ impl<T: Debug + Default + 'static> ComponentBucketTrait for Vec<Option<T>> {
 
     fn remove_component(&mut self, index: Index) {
         self[index] = None;
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
     }
 }
 
@@ -104,7 +98,6 @@ impl Universe {
             let bucket = self
                 .component_buckets
                 .get_mut(&type_id)
-                .map(|bucket| bucket.as_any_mut())
                 .and_then(|bucket| bucket.downcast_mut::<Vec<Option<T>>>());
 
             if let Some(bucket) = bucket {
@@ -129,7 +122,7 @@ impl Universe {
         let type_id = TypeId::of::<T>();
 
         if let Some(bucket) = self.component_buckets.get_mut(&type_id) {
-            if let Some(bucket) = bucket.as_any_mut().downcast_mut::<Vec<Option<T>>>() {
+            if let Some(bucket) = bucket.downcast_mut::<Vec<Option<T>>>() {
                 bucket[entity_id] = None;
             }
         }
@@ -148,7 +141,7 @@ impl Universe {
         let bucket = self
             .component_buckets
             .get(&type_id)
-            .and_then(|bucket| bucket.as_any().downcast_ref::<Vec<Option<T>>>());
+            .and_then(|bucket| bucket.downcast_ref::<Vec<Option<T>>>());
 
         if let Some(bucket) = bucket {
             if let Some(EntityRecord::Occupied(index)) = self.entity_id_records.get(&entity_id) {
@@ -167,7 +160,7 @@ impl Universe {
             let bucket = self
                 .component_buckets
                 .get(&type_id)
-                .and_then(|bucket| bucket.as_any().downcast_ref::<Vec<Option<T>>>());
+                .and_then(|bucket| bucket.downcast_ref::<Vec<Option<T>>>());
 
             if let Some(bucket) = bucket {
                 let component = bucket.get(*index).and_then(|component| component.as_ref());
@@ -189,7 +182,7 @@ impl Universe {
             let bucket = self
                 .component_buckets
                 .get_mut(&type_id)
-                .and_then(|bucket| bucket.as_any_mut().downcast_mut::<Vec<Option<T>>>());
+                .and_then(|bucket| bucket.downcast_mut::<Vec<Option<T>>>());
 
             if let Some(bucket) = bucket {
                 let component = bucket

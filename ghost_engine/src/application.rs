@@ -1,8 +1,10 @@
-pub trait ApplicationRunner {
-    fn run(&mut self, app: &mut Application);
+use downcast_rs::{impl_downcast, Downcast};
 
-    fn as_any(&self) -> &dyn std::any::Any;
+pub trait ApplicationRunner: Downcast {
+    fn run(&mut self, app: &mut Application);
 }
+
+impl_downcast!(ApplicationRunner);
 
 pub struct RunOnceRunner;
 
@@ -11,10 +13,6 @@ impl ApplicationRunner for RunOnceRunner {
         app.on_startup();
         app.on_update();
         app.on_shutdown();
-    }
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
     }
 }
 
@@ -155,10 +153,6 @@ mod tests {
             fn run(&mut self, _: &mut Application) {
                 // Do nothing
             }
-
-            fn as_any(&self) -> &dyn std::any::Any {
-                self
-            }
         }
 
         Application::default().with_runner(CustomRunner);
@@ -173,10 +167,6 @@ mod tests {
         impl ApplicationRunner for CustomRunner {
             fn run(&mut self, _: &mut Application) {
                 self.value += 1;
-            }
-
-            fn as_any(&self) -> &dyn std::any::Any {
-                self
             }
         }
 
@@ -201,10 +191,6 @@ mod tests {
         impl ApplicationRunner for CustomRunner {
             fn run(&mut self, _: &mut Application) {
                 // Do nothing
-            }
-
-            fn as_any(&self) -> &dyn std::any::Any {
-                self
             }
         }
 

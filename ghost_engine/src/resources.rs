@@ -1,32 +1,22 @@
-use std::{
-    any::{Any, TypeId},
-    collections::HashMap,
-};
+use std::{any::TypeId, collections::HashMap};
+
+use downcast_rs::{impl_downcast, Downcast};
 
 #[derive(Debug, PartialEq)]
 pub enum ResourceCreationError {
     AlreadyRegistered,
 }
 
-pub trait ResourceTrait {
-    fn as_any(&self) -> &dyn Any;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-}
+pub trait ResourceTrait: Downcast {}
+
+impl_downcast!(ResourceTrait);
 
 #[derive(Default)]
 pub struct Resource<T: Default + 'static> {
     resource: T,
 }
 
-impl<T: Default + 'static> ResourceTrait for Resource<T> {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
+impl<T: Default + 'static> ResourceTrait for Resource<T> {}
 
 #[derive(Default)]
 pub struct ResourceManager {
