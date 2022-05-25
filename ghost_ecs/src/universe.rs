@@ -5,12 +5,24 @@ use std::{
 
 use crate::{ComponentBucket, EntityId, Index};
 
+/// Describes the state of a "column" in the storage system.
+///
+/// If a column is `Vacant` it means we can use that storage space
+/// for a new entity that we will create in the `Universe`.
 #[derive(Debug)]
 enum EntityRecord {
     Occupied(Index),
     Vacant(Index),
 }
 
+/// Stores and exposes operations on entities and components.
+///
+/// Each entity has a series of components.We have only one instance of a component of each component
+/// type per entity.
+///
+/// The components can be attached, detached, queried and modified.
+///
+/// More details about the memory model can be found in the crate level documention.
 #[derive(Default)]
 pub struct Universe {
     next_entity_id: EntityId,
@@ -19,6 +31,14 @@ pub struct Universe {
 }
 
 impl Universe {
+    /// ```
+    /// use ghost_ecs::Universe;
+    ///
+    /// let mut universe = Universe::default();
+    /// let entity = universe.create_entity();
+    ///
+    /// assert_eq!(true, universe.contains_entity(entity));
+    /// ```
     pub fn create_entity(&mut self) -> EntityId {
         let new_entity_id = self.next_entity_id;
 
@@ -53,6 +73,21 @@ impl Universe {
         new_entity_id
     }
 
+    /// Removes an entity from `Universe`.
+    ///
+    /// When an entity is removed the attached components are detached
+    /// and marked for reuse by a new entity.
+    ///
+    /// ```
+    /// use ghost_ecs::Universe;
+    ///
+    /// let mut universe = Universe::default();
+    /// let entity = universe.create_entity();
+    ///
+    /// universe.remove_entity(entity);
+    ///
+    /// assert_eq!(false, universe.contains_entity(entity));
+    /// ```
     pub fn remove_entity(&mut self, entity_id: EntityId) {
         let entity_record = self.entity_id_records.get(&entity_id);
 
@@ -67,6 +102,19 @@ impl Universe {
         }
     }
 
+    /// ```
+    /// use ghost_ecs::Universe;
+    ///
+    /// #[derive(Default)]
+    /// struct Component(usize);
+    ///
+    /// let mut universe = Universe::default();
+    /// let entity = universe.create_entity();
+    ///
+    /// universe.add_component::<Component>(entity);
+    ///
+    /// assert_eq!(true, universe.has_component::<Component>(entity));
+    /// ```
     pub fn add_component<T: Default + 'static>(&mut self, entity_id: EntityId) {
         let type_id = TypeId::of::<T>();
         let capacity = self.entity_id_records.keys().len();
@@ -97,6 +145,17 @@ impl Universe {
         }
     }
 
+    /// ```
+    /// use ghost_ecs::Universe;
+    ///
+    /// let mut universe = Universe::default();
+    /// let entity = universe.create_entity();
+    ///
+    /// universe.add_component::<f32>(entity);
+    /// universe.remove_component::<f32>(entity);
+    ///
+    /// assert_eq!(false, universe.has_component::<f32>(entity));
+    /// ```
     pub fn remove_component<T: Default + 'static>(&mut self, entity_id: EntityId) {
         let type_id = TypeId::of::<T>();
 
@@ -107,6 +166,7 @@ impl Universe {
         }
     }
 
+    /// Check if the universe contains the entity.
     pub fn contains_entity(&self, entity_id: EntityId) -> bool {
         matches!(
             self.entity_id_records.get(&entity_id),
@@ -114,6 +174,7 @@ impl Universe {
         )
     }
 
+    /// Check if a component is attached to an entity.
     pub fn has_component<T: Default + 'static>(&self, entity_id: EntityId) -> bool {
         let type_id = TypeId::of::<T>();
 
@@ -131,6 +192,20 @@ impl Universe {
         false
     }
 
+    /// Get a const reference to a component
+    ///
+    /// ```
+    /// use ghost_ecs::Universe;
+    ///
+    /// let mut universe = Universe::default();
+    /// let entity = universe.create_entity();
+    //
+    /// universe.add_component::<usize>(entity);
+    ///
+    /// let component = universe.get_component::<usize>(entity);
+    ///
+    /// assert_eq!(&0, component.unwrap());
+    /// ```
     pub fn get_component<T: Default + 'static>(&self, entity_id: EntityId) -> Option<&T> {
         let type_id = TypeId::of::<T>();
         let entity_record = self.entity_id_records.get(&entity_id);
@@ -150,6 +225,24 @@ impl Universe {
         None
     }
 
+    /// ```
+    /// use ghost_ecs::Universe;
+    ///
+    /// let mut universe = Universe::default();
+    /// let entity = universe.create_entity();
+    ///
+    /// universe.add_component::<usize>(entity);
+    ///
+    /// let component = universe.get_component_mut::<usize>(entity);
+    ///
+    /// if let Some(component) = component {
+    ///     *component = 1;
+    /// }
+    ///
+    /// let component = universe.get_component::<usize>(entity);
+    ///
+    /// assert_eq!(&1, component.unwrap());
+    /// ```
     pub fn get_component_mut<T: Default + 'static>(
         &mut self,
         entity_id: EntityId,
@@ -180,42 +273,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn can_create_default_universe() {
-        Universe::default();
-    }
-
-    #[test]
-    fn can_crate_entity() {
-        let mut universe = Universe::default();
-        let entity = universe.create_entity();
-
-        assert!(universe.contains_entity(entity));
-    }
-
-    #[test]
-    fn can_remove_existing_entity() {
-        let mut universe = Universe::default();
-        let entity = universe.create_entity();
-
-        universe.remove_entity(entity);
-
-        assert!(!universe.contains_entity(entity));
-    }
-
-    #[test]
     fn dont_crash_when_removing_unkown_entity() {
         let mut universe = Universe::default();
         universe.remove_entity(9999);
-    }
-
-    #[test]
-    fn can_add_component_to_single_entity() {
-        let mut universe = Universe::default();
-        let entity = universe.create_entity();
-
-        universe.add_component::<usize>(entity);
-
-        assert!(universe.has_component::<usize>(entity));
     }
 
     #[test]
@@ -260,35 +320,6 @@ mod tests {
 
         assert!(universe.has_component::<usize>(entity));
         assert!(universe.has_component::<f32>(entity));
-    }
-
-    #[test]
-    fn can_remove_components_from_entity() {
-        let mut universe = Universe::default();
-        let entity1 = universe.create_entity();
-        let entity2 = universe.create_entity();
-
-        universe.add_component::<usize>(entity1);
-        universe.add_component::<f32>(entity2);
-
-        universe.remove_component::<usize>(entity1);
-        universe.remove_component::<f32>(entity2);
-
-        assert!(!universe.has_component::<usize>(entity1));
-        assert!(!universe.has_component::<f32>(entity2));
-    }
-
-    #[test]
-    fn can_remove_entity_and_attached_components() {
-        let mut universe = Universe::default();
-        let entity = universe.create_entity();
-
-        universe.add_component::<usize>(entity);
-        universe.add_component::<f32>(entity);
-
-        universe.remove_entity(entity);
-
-        assert!(!universe.contains_entity(entity));
     }
 
     #[test]
@@ -350,35 +381,5 @@ mod tests {
         assert!(!universe.has_component::<usize>(entity4));
         assert!(universe.has_component::<f32>(entity4));
         assert!(!universe.has_component::<u32>(entity4));
-    }
-
-    #[test]
-    fn can_read_component_data() {
-        let mut universe = Universe::default();
-        let entity = universe.create_entity();
-
-        universe.add_component::<usize>(entity);
-
-        let component = universe.get_component::<usize>(entity);
-
-        assert_eq!(*(component.unwrap()), 0);
-    }
-
-    #[test]
-    fn can_modify_component_data() {
-        let mut universe = Universe::default();
-        let entity = universe.create_entity();
-
-        universe.add_component::<usize>(entity);
-
-        let component = universe.get_component_mut::<usize>(entity);
-
-        if let Some(component) = component {
-            *component = 1;
-        }
-
-        let component = universe.get_component::<usize>(entity);
-
-        assert_eq!(*(component.unwrap()), 1);
     }
 }
