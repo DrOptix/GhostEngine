@@ -10,7 +10,7 @@ use crate::{ComponentBucket, EntityId, Index};
 /// If a column is `Vacant` it means we can use that storage space
 /// for a new entity that we will create in the `Universe`.
 #[derive(Debug)]
-enum EntityRecord {
+pub enum EntityRecord {
     Occupied(Index),
     Vacant(Index),
 }
