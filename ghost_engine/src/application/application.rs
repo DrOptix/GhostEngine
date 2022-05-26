@@ -2,6 +2,61 @@
 
 use super::{ApplicationRunner, RunOnceRunner};
 
+/// Reperesent a container of logic and data.
+///
+/// It bundles a `ResourceManager`, a `ghost_ecs::Universe` ECS and necesary
+/// startup, shutdown and update actions.
+///
+/// The actions for a specific stage are executed in the order in wich they are registered.
+///
+/// The application also can be executed by an `ApplicationRunner` or the `Application`
+/// can execute itself with an assigned runner.
+///
+/// By default an application is constructed with the embedded runner set to
+/// `RunOnceRunner`.
+/// ```
+/// use ghost_engine::application::Application;
+///
+/// Application::default()
+///     .with_startup_task(|_| {
+///         println!("Startup task")
+///     })
+///     .with_shutdown_task(|_| {
+///         println!("Shutdown task")
+///     })
+///     .with_update_task(|_| {
+///         println!("Update task")
+///     })
+///     .run();
+/// ```
+/// The same can also be expressed with functions instead of closures:
+/// ```
+/// use ghost_engine::application::Application;
+///
+/// fn startup(app: &mut Application) {
+///     println!("Hello from {}!", app.title());
+/// }
+///
+/// fn shutdown(_: &mut Application) {
+///     println!("Shutdown task")
+/// }
+///
+/// fn update(_: &mut Application) {
+///     println!("Shutdown task")
+/// }
+///
+/// Application::default()
+///     .with_title("Ghost Engine Example")
+///     .with_startup_task(|_| {
+///     })
+///     .with_shutdown_task(|_| {
+///         println!("Shutdown task")
+///     })
+///     .with_update_task(|_| {
+///         println!("Update task")
+///     })
+///     .run();
+/// ```
 pub struct Application<'app> {
     title: String,
 
@@ -117,34 +172,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn can_create_default_application() {
-        Application::default();
-    }
-
-    #[test]
-    fn can_set_and_get_custom_title() {
-        let app = Application::default().with_title("custom");
-
-        let expected = "custom";
-        let actual = app.title();
-
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn can_set_custom_runner() {
-        struct CustomRunner;
-
-        impl ApplicationRunner for CustomRunner {
-            fn run(&mut self, _: &mut Application) {
-                // Do nothing
-            }
-        }
-
-        Application::default().with_runner(CustomRunner);
-    }
-
-    #[test]
     fn can_run_application_with_assigned_custom_runner() {
         struct CustomRunner {
             value: i32,
@@ -184,140 +211,5 @@ mod tests {
         let mut app = Application::default();
 
         runner.run(&mut app);
-    }
-
-    #[test]
-    fn can_set_function_as_startup_task() {
-        fn task(_: &mut Application) {}
-
-        Application::default().with_startup_task(task);
-    }
-
-    #[test]
-    fn can_set_closure_as_startup_task() {
-        let task = |_: &mut Application| {};
-
-        Application::default().with_startup_task(task);
-    }
-
-    #[test]
-    fn can_execute_closure_as_startup_task() {
-        let task = |app: &mut Application| {
-            app.title = "Changed".to_string();
-        };
-
-        let mut app = Application::default().with_startup_task(task);
-
-        app.run();
-
-        let expected = "Changed";
-        let actual = app.title();
-
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn can_execute_function_as_startup_task() {
-        fn task(app: &mut Application) {
-            app.title = "Changed".to_string();
-        }
-
-        let mut app = Application::default().with_startup_task(task);
-        app.run();
-
-        let expected = "Changed";
-        let actual = app.title();
-
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn can_set_function_as_update_task() {
-        fn task(_: &mut Application) {}
-
-        Application::default().with_update_task(task);
-    }
-
-    #[test]
-    fn can_set_closure_as_update_task() {
-        let task = |_: &mut Application| {};
-
-        Application::default().with_update_task(task);
-    }
-
-    #[test]
-    fn can_execute_closure_as_update_task() {
-        let task = |app: &mut Application| {
-            app.title = "Changed".to_string();
-        };
-
-        let mut app = Application::default().with_update_task(task);
-
-        app.run();
-
-        let expected = "Changed";
-        let actual = app.title();
-
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn can_execute_function_as_update_task() {
-        fn task(app: &mut Application) {
-            app.title = "Changed".to_string();
-        }
-
-        let mut app = Application::default().with_update_task(task);
-        app.run();
-
-        let expected = "Changed";
-        let actual = app.title();
-
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn can_set_function_as_shutdown_task() {
-        fn task(_: &mut Application) {}
-
-        Application::default().with_shutdown_task(task);
-    }
-
-    #[test]
-    fn can_set_closure_as_shutdown_task() {
-        let task = |_: &mut Application| {};
-
-        Application::default().with_shutdown_task(task);
-    }
-
-    #[test]
-    fn can_execute_closure_as_shutdown_task() {
-        let task = |app: &mut Application| {
-            app.title = "Changed".to_string();
-        };
-
-        let mut app = Application::default().with_shutdown_task(task);
-
-        app.run();
-
-        let expected = "Changed";
-        let actual = app.title();
-
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn can_execute_function_as_shutdown_task() {
-        fn task(app: &mut Application) {
-            app.title = "Changed".to_string();
-        }
-
-        let mut app = Application::default().with_shutdown_task(task);
-        app.run();
-
-        let expected = "Changed";
-        let actual = app.title();
-
-        assert_eq!(expected, actual);
     }
 }

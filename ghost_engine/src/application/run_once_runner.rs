@@ -1,5 +1,6 @@
 use super::{Application, ApplicationRunner};
 
+/// This runner executes only one step of the applicaton.
 pub struct RunOnceRunner;
 
 impl ApplicationRunner for RunOnceRunner {
