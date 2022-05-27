@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 downcast-rs = "1.2.0"
+
+ghost_ecs = { version="0.1.0", path="../ghost_ecs" }

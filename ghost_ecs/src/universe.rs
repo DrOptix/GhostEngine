@@ -102,6 +102,8 @@ impl Universe {
         }
     }
 
+    /// Add a component to the entity. The component will be initialized with the default value.
+    ///
     /// ```
     /// use ghost_ecs::Universe;
     ///
@@ -143,6 +145,36 @@ impl Universe {
 
             entry.insert(bucket);
         }
+    }
+
+    /// Add a component to the entity. The component will be initialized with the value built using the `builder` function.
+    ///
+    /// ```
+    /// use ghost_ecs::Universe;
+    ///
+    /// #[derive(Default, Debug, PartialEq)]
+    /// struct Component(usize);
+    ///
+    /// let mut universe = Universe::default();
+    /// let entity = universe.create_entity();
+    ///
+    /// universe.add_component_with(entity, || { Component(1234) });
+    ///
+    /// assert_eq!(true, universe.has_component::<Component>(entity));
+    /// assert_eq!(Some(&Component(1234)), universe.get_component::<Component>(entity));
+    /// ```
+    pub fn add_component_with<T, BUILDER>(&mut self, entity: EntityId, builder: BUILDER)
+    where
+        T: Default + 'static,
+        BUILDER: FnOnce() -> T,
+    {
+        self.add_component::<T>(entity);
+
+        // SAFETY:
+        // we just created the component above so it is safe to unwrap.
+        let comp = self.get_component_mut::<T>(entity).unwrap();
+
+        *comp = builder();
     }
 
     /// ```
