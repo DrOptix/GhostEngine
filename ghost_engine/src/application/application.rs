@@ -1,5 +1,9 @@
 #![allow(clippy::module_inception)]
 
+use ghost_ecs::{EntityId, Universe};
+
+use crate::resources::{ResourceCreationError, ResourceManager};
+
 use super::{ApplicationRunner, RunOnceRunner};
 
 /// Reperesent a container of logic and data.
@@ -60,6 +64,9 @@ use super::{ApplicationRunner, RunOnceRunner};
 pub struct Application<'app> {
     title: String,
 
+    resources: ResourceManager,
+    universe: Universe,
+
     startup_task: Option<Box<dyn Fn(&mut Application) + 'app>>,
     shutdown_task: Option<Box<dyn Fn(&mut Application) + 'app>>,
     update_task: Option<Box<dyn Fn(&mut Application) + 'app>>,
@@ -71,6 +78,9 @@ impl Default for Application<'_> {
     fn default() -> Self {
         Self {
             title: "Ghost Engine".to_string(),
+
+            resources: ResourceManager::default(),
+            universe: Universe::default(),
 
             startup_task: None,
             shutdown_task: None,
@@ -112,7 +122,7 @@ impl<'app> Application<'app> {
     }
 }
 
-/// Getters
+/// Getters and Setters
 impl Application<'_> {
     pub fn title(&self) -> &str {
         &self.title
@@ -120,6 +130,46 @@ impl Application<'_> {
 
     pub fn runner(&self) -> &dyn ApplicationRunner {
         self.runner.as_ref()
+    }
+
+    pub fn create_entity(&mut self) -> EntityId {
+        self.universe.create_entity()
+    }
+
+    pub fn get_resource<T: Default + 'static>(&self) -> Option<&T> {
+        self.resources.get_resource()
+    }
+
+    pub fn get_resource_mut<T: Default + 'static>(&mut self) -> Option<&mut T> {
+        self.resources.get_resource_mut()
+    }
+
+    pub fn add_resource<T: Default + 'static>(&mut self) -> Result<(), ResourceCreationError> {
+        self.resources.add_resource::<T>()
+    }
+
+    pub fn remove_resource<T: Default + 'static>(&mut self) {
+        self.resources.remove_resource::<T>();
+    }
+
+    pub fn add_component<T: Default + 'static>(&mut self, entity: EntityId) {
+        self.universe.add_component::<T>(entity)
+    }
+
+    pub fn add_component_with<T, BUILDER>(&mut self, entity: EntityId, builder: BUILDER)
+    where
+        T: Default + 'static,
+        BUILDER: FnOnce() -> T,
+    {
+        self.universe.add_component_with(entity, builder);
+    }
+
+    pub fn get_component<T: Default + 'static>(&self, entity: EntityId) -> Option<&T> {
+        self.universe.get_component::<T>(entity)
+    }
+
+    pub fn get_component_mut<T: Default + 'static>(&mut self, entity: EntityId) -> Option<&mut T> {
+        self.universe.get_component_mut::<T>(entity)
     }
 }
 

@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 ghost_engine = { path = "../ghost_engine" }
+ghost_ecs = { version="0.1.0", path="../ghost_ecs" }
