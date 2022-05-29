@@ -311,7 +311,7 @@ mod tests {
     }
 
     #[test]
-    fn can_add_same_component_to_multiple_entities() {
+    fn test_add_same_component_to_multiple_entities() {
         let mut universe = Universe::default();
         let entity1 = universe.create_entity();
         let entity2 = universe.create_entity();
@@ -327,7 +327,7 @@ mod tests {
     }
 
     #[test]
-    fn can_add_different_components_to_multiple_entities() {
+    fn test_add_different_components_to_multiple_entities() {
         let mut universe = Universe::default();
         let entity1 = universe.create_entity();
         let entity2 = universe.create_entity();
@@ -343,7 +343,7 @@ mod tests {
     }
 
     #[test]
-    fn can_add_different_components_to_the_same_entity() {
+    fn test_add_different_components_to_the_same_entity() {
         let mut universe = Universe::default();
         let entity = universe.create_entity();
 
@@ -355,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn can_keep_memory_integrity_when_removing_non_attached_components() {
+    fn test_keep_memory_integrity_when_removing_non_attached_components() {
         let mut universe = Universe::default();
         let entity1 = universe.create_entity();
         let entity2 = universe.create_entity();
@@ -378,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    fn can_reuse_storage_space_from_deleted_entity_and_components() {
+    fn test_reuse_storage_space_from_deleted_entity_and_components() {
         let mut universe = Universe::default();
         let entity1 = universe.create_entity();
         let entity2 = universe.create_entity();

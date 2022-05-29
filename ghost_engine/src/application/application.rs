@@ -222,7 +222,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn can_run_application_with_assigned_custom_runner() {
+    fn test_run_application_with_assigned_custom_runner() {
         struct CustomRunner {
             value: i32,
         }
@@ -248,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn can_run_application_with_custom_runner() {
+    fn test_run_application_with_custom_runner() {
         struct CustomRunner;
 
         impl ApplicationRunner for CustomRunner {
