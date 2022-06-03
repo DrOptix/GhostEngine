@@ -53,9 +53,11 @@
 //! we may not get any benefit from vectorization.
 
 mod component_bucket;
+mod query;
 mod universe;
 
 pub use component_bucket::*;
+pub use query::*;
 pub use universe::*;
 
 /// This represents an entity in `ghost_ecs`.

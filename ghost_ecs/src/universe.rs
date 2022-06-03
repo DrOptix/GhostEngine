@@ -3,7 +3,7 @@ use std::{
     collections::{hash_map::Entry, HashMap},
 };
 
-use crate::{ComponentBucket, EntityId, Index};
+use crate::{ComponentBucket, EntityId, Index, Query};
 
 /// Describes the state of a "column" in the storage system.
 ///
@@ -297,6 +297,10 @@ impl Universe {
         }
 
         None
+    }
+
+    pub fn query(&mut self) -> Query {
+        Query::new(self)
     }
 }
 
