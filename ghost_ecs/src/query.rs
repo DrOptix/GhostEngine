@@ -1,7 +1,9 @@
 use crate::{EntityId, Universe};
 
 #[derive(Debug, PartialEq)]
-pub enum QueryError {}
+pub enum QueryError {
+    ComponentNotFoundInStorage,
+}
 
 #[derive(Debug, PartialEq)]
 pub struct QueryItem {}
@@ -31,7 +33,7 @@ impl<'q> Query<'q> {
         }
     }
 
-    pub fn with_component<T>(self) -> Self {
+    pub fn with_component<T>(self) -> Result<Self, QueryError> {
         todo!()
     }
 
@@ -42,7 +44,7 @@ impl<'q> Query<'q> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Universe;
+    use crate::{QueryError, Universe};
 
     #[test]
     fn test_query_single_read_only_set_component() {
@@ -72,18 +74,25 @@ mod tests {
         universe.add_component_with(e6, || -6_i32);
         universe.add_component_with(e2, || -2_i32);
 
-        let query_results = universe.query().with_component::<usize>().run();
+        let query_results = universe
+            .query()
+            .with_component::<usize>()
+            .map(|mut query| query.run());
 
-        assert_eq!(query_results.len(), 3);
+        assert_ne!(query_results, Err(QueryError::ComponentNotFoundInStorage));
 
-        assert_eq!(query_results[0].entity(), e1);
-        assert_eq!(query_results[0].get::<usize>(), Ok(&1_usize));
+        if let Ok(query_results) = query_results {
+            assert_eq!(query_results.len(), 3);
 
-        assert_eq!(query_results[1].entity(), e6);
-        assert_eq!(query_results[1].get::<usize>(), Ok(&6_usize));
+            assert_eq!(query_results[0].entity(), e1);
+            assert_eq!(query_results[0].get::<usize>(), Ok(&1_usize));
 
-        assert_eq!(query_results[0].entity(), e5);
-        assert_eq!(query_results[2].get::<usize>(), Ok(&5_usize));
+            assert_eq!(query_results[1].entity(), e6);
+            assert_eq!(query_results[1].get::<usize>(), Ok(&6_usize));
+
+            assert_eq!(query_results[0].entity(), e5);
+            assert_eq!(query_results[2].get::<usize>(), Ok(&5_usize));
+        }
     }
 
     #[test]
@@ -114,13 +123,20 @@ mod tests {
         universe.add_component_with(e6, || -6_i32);
         universe.add_component_with(e2, || -2_i32);
 
-        let query_results = universe.query().with_component::<usize>().run();
+        let query_results = universe
+            .query()
+            .with_component::<usize>()
+            .map(|mut query| query.run());
 
-        assert_eq!(query_results.len(), 3);
+        assert_ne!(query_results, Err(QueryError::ComponentNotFoundInStorage));
 
-        assert_eq!(query_results[0].get_mut::<usize>(), Ok(&mut 1_usize));
-        assert_eq!(query_results[1].get_mut::<usize>(), Ok(&mut 6_usize));
-        assert_eq!(query_results[2].get_mut::<usize>(), Ok(&mut 5_usize));
+        if let Ok(query_results) = query_results {
+            assert_eq!(query_results.len(), 3);
+
+            assert_eq!(query_results[0].get_mut::<usize>(), Ok(&mut 1_usize));
+            assert_eq!(query_results[1].get_mut::<usize>(), Ok(&mut 6_usize));
+            assert_eq!(query_results[2].get_mut::<usize>(), Ok(&mut 5_usize));
+        }
     }
 
     #[test]
@@ -151,15 +167,22 @@ mod tests {
         universe.add_component_with(e6, || -6_i32);
         universe.add_component_with(e2, || -2_i32);
 
-        let query_results = universe.query().with_component::<usize>().run();
+        let query_results = universe
+            .query()
+            .with_component::<usize>()
+            .map(|mut query| query.run());
 
-        assert_eq!(query_results.len(), 3);
+        assert_ne!(query_results, Err(QueryError::ComponentNotFoundInStorage));
 
-        assert_eq!(query_results[0].get::<Option<usize>>(), Ok(&Some(1_usize)));
-        assert_eq!(query_results[1].get::<Option<usize>>(), Ok(&None));
-        assert_eq!(query_results[2].get::<Option<usize>>(), Ok(&Some(6_usize)));
-        assert_eq!(query_results[3].get::<Option<usize>>(), Ok(&None));
-        assert_eq!(query_results[2].get::<Option<usize>>(), Ok(&Some(5_usize)));
+        if let Ok(query_results) = query_results {
+            assert_eq!(query_results.len(), 3);
+
+            assert_eq!(query_results[0].get::<Option<usize>>(), Ok(&Some(1_usize)));
+            assert_eq!(query_results[1].get::<Option<usize>>(), Ok(&None));
+            assert_eq!(query_results[2].get::<Option<usize>>(), Ok(&Some(6_usize)));
+            assert_eq!(query_results[3].get::<Option<usize>>(), Ok(&None));
+            assert_eq!(query_results[2].get::<Option<usize>>(), Ok(&Some(5_usize)));
+        }
     }
 
     #[test]
@@ -190,23 +213,30 @@ mod tests {
         universe.add_component_with(e6, || -6_i32);
         universe.add_component_with(e2, || -2_i32);
 
-        let query_results = universe.query().with_component::<Option<usize>>().run();
+        let query_results = universe
+            .query()
+            .with_component::<Option<usize>>()
+            .map(|mut query| query.run());
 
-        assert_eq!(query_results.len(), 4);
+        assert_ne!(query_results, Err(QueryError::ComponentNotFoundInStorage));
 
-        assert_eq!(
-            query_results[0].get_mut::<Option<usize>>(),
-            Ok(&mut Some(1_usize))
-        );
-        assert_eq!(query_results[1].get_mut::<Option<usize>>(), Ok(&mut None));
-        assert_eq!(
-            query_results[2].get_mut::<Option<usize>>(),
-            Ok(&mut Some(6_usize))
-        );
-        assert_eq!(query_results[3].get_mut::<Option<usize>>(), Ok(&mut None));
-        assert_eq!(
-            query_results[2].get_mut::<Option<usize>>(),
-            Ok(&mut Some(5_usize))
-        );
+        if let Ok(query_results) = query_results {
+            assert_eq!(query_results.len(), 4);
+
+            assert_eq!(
+                query_results[0].get_mut::<Option<usize>>(),
+                Ok(&mut Some(1_usize))
+            );
+            assert_eq!(query_results[1].get_mut::<Option<usize>>(), Ok(&mut None));
+            assert_eq!(
+                query_results[2].get_mut::<Option<usize>>(),
+                Ok(&mut Some(6_usize))
+            );
+            assert_eq!(query_results[3].get_mut::<Option<usize>>(), Ok(&mut None));
+            assert_eq!(
+                query_results[2].get_mut::<Option<usize>>(),
+                Ok(&mut Some(5_usize))
+            );
+        }
     }
 }

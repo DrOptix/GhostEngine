@@ -18,10 +18,10 @@
 //!           └── Tn ────►│ │ C1 │     C2      C3    ...   Cn │
 //!                       └─┼────┼────────────────────────────┘
 //!                         └────┘
-//!                       │                       │
-//!                       └───────────┬───────────┘
-//!                                   │
-//!                     Continous Bucket of Option<Tn>
+//!                       │                                   │
+//!                       └──────────────────┬────────────────┘
+//!                                          │
+//!                               Continous Bucket of Tn
 //!```
 //!
 //! In words we have one bucket or array, if you will, per each component type.
