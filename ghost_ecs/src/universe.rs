@@ -1,6 +1,9 @@
-use crate::{ComponentBucket, EntityId, Index, Query};
+use crate::{ComponentBucket, EntityId, Index, Query, QueryAccessType, QueryError, QueryItem};
 use bitvec::prelude::*;
-use std::{any::TypeId, collections::HashMap};
+use std::{
+    any::{Any, TypeId},
+    collections::HashMap,
+};
 
 /// Describes the state of a "column" in the storage system.
 ///
@@ -346,8 +349,46 @@ impl Universe {
         None
     }
 
-    pub fn query(&mut self) -> Query {
-        Query::new(self)
+    pub fn run_query(&mut self, query: &Query) -> Result<Vec<QueryItem>, QueryError> {
+        let mut has_errors = false;
+        let mut unkown_components = Vec::default();
+
+        for (access_type, query_components) in query.components() {
+            for query_component in query_components {
+                if !self
+                    .component_buckets
+                    .contains_key(&query_component.type_id)
+                {
+                    has_errors = true;
+                    unkown_components.push(query_component.type_name.clone());
+                } else if !has_errors {
+                    for (entity_id, record) in self.entity_id_records.iter_mut() {
+                        if let EntityRecord::Occupied { index, .. } = record {
+                            todo!()
+                            // match access_type {
+                            //     QueryAccessType::Read => {
+                            //         let x = self
+                            //             .component_buckets
+                            //             .get(&query_component.type_id)
+                            //             .unwrap()
+                            //             .downcast::<dyn Any>();
+                            //     }
+
+                            //     QueryAccessType::Write => todo!(),
+                            //     QueryAccessType::TryRead => todo!(),
+                            //     QueryAccessType::TryWrite => todo!(),
+                            // }
+                        }
+                    }
+                }
+            }
+        }
+
+        if !has_errors {
+            todo!()
+        } else {
+            Err(QueryError::UnknownComponent(unkown_components))
+        }
     }
 }
 

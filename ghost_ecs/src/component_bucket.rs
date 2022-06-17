@@ -15,3 +15,11 @@ impl<T: Default + 'static> ComponentBucket for Vec<T> {
         self.push(T::default());
     }
 }
+
+// impl<T: Default + 'static> Deref for dyn ComponentBucket {
+//     type Target = [T];
+
+//     fn deref(&self) -> &Self::Target {
+//         todo!()
+//     }
+// }
