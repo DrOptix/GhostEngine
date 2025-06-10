@@ -1,3 +1,12 @@
+
+## Archived
+
+The project was archived on 2025-06-11. It will no longer be maintained.
+
+
+If I ever venture in the realm of games, game engines and/or computer graphics it will be as part of
+a new project and with a new vision.
+
 # GhostEngine
 Yet another Rust game engine
 
